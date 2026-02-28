@@ -1939,18 +1939,18 @@ local function ExecuteJump()
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        -- Instead of just "Jumping," we apply a Physics Impulse
-        -- This is harder for servers to distinguish from a normal jump
+        -- Applichiamo la velocità verso l'alto
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
-            _G.JumpPower, 
+            _G.JumpPower or 50, -- Usiamo un fallback se _G.JumpPower è nil
             hrp.AssemblyLinearVelocity.Z
         )
-        -- Update state to 'Physics' to prevent state-lock deaths
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        
+        -- Cambiamo lo stato in Jumping invece di Physics
+        -- Questo evita che il personaggio inizi a rotolare o girare a caso
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end
-
 -- // BINDING
 UserInputService.JumpRequest:Connect(function()
     task.wait(0.03) -- Mimics human input latency
