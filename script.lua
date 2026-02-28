@@ -1939,15 +1939,18 @@ local function ExecuteJump()
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        -- Applichiamo la velocità verso l'alto
+        -- 1. Resettiamo la velocità angolare per fermare rotazioni improvvise
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+        -- 2. Applichiamo la forza verso l'alto mantenendo la spinta direzionale attuale
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
-            _G.JumpPower or 50, -- Usiamo un fallback se _G.JumpPower è nil
+            _G.JumpPower or 50, 
             hrp.AssemblyLinearVelocity.Z
         )
-        
-        -- Cambiamo lo stato in Jumping invece di Physics
-        -- Questo evita che il personaggio inizi a rotolare o girare a caso
+
+        -- 3. Usiamo lo stato 'Land' o 'Jumping' per resettare la fisica interna
+        -- 'Land' è molto efficace per fermare rotazioni indesiderate
         hum:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end
