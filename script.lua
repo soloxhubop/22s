@@ -1939,13 +1939,18 @@ local function ExecuteJump()
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        hum:ChangeState(Enum.HumanoidStateType.Physics)
         
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
             (_G.JumpPower or 50), 
             hrp.AssemblyLinearVelocity.Z
         )
+        
+        task.wait(0.1)
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Falling)
+        end
     end
 end
 
