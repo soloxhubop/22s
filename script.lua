@@ -1934,27 +1934,39 @@ end)
 
 -- // SMOOTH JUMP EXECUTION
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local canJump = true
+local cooldownTime = 0.2 -- Tempo di attesa tra un salto e l'altro
 
 local function ExecuteJump()
     local char = game.Players.LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-    if hrp and hum and _G.InfJump then
-        -- Usiamo una forza che non rompe lo stato dello Humanoid
-        -- Se muori ancora, abbassa 45 a 35 o 40
+    if hrp and hum and _G.InfJump and canJump then
+        canJump = false
+        
+        -- Reset della rotazione per non cadere/girare
+        hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
+
+        -- Applichiamo la velocità
+        -- Se ti teletrasporta ancora, prova a mettere 40 invece di 45
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
             (_G.JumpPower or 45), 
             hrp.AssemblyLinearVelocity.Z
         )
-        
-        -- Invece di cambiare stato in Jumping o Physics (che ti killa)
-        -- resettiamo solo la rotazione sugli assi che ti fanno cadere
-        hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
+
+        -- Aspettiamo prima di poter saltare di nuovo (evita il rubberbanding)
+        task.wait(cooldownTime)
+        canJump = true
     end
 end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.Space then
+        ExecuteJump()
+    end
+end)
 
 -- InputBegan è più sicuro di JumpRequest per evitare il "kick" per spam
 UserInputService.InputBegan:Connect(function(input, processed)
