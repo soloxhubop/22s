@@ -1904,57 +1904,43 @@ Player.CharacterAdded:Connect(function()
     if Enabled.BatAimbot then stopBatAimbot() task.wait(0.1) startBatAimbot() end
     if Enabled.Unwalk then startUnwalk() end
 end)
--- // CONFIG
-local _G = getgenv and getgenv() or _G
-_G.InfJump = true
-_G.JumpPower = 40 -- Keep it around 40-50 to avoid Velocity Bans
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 
--- // THE "CHILLI" BYPASS
--- This spoofing loop resets the game's internal "Anti-Fly" timer
-task.spawn(function()
-    while true do
-        task.wait(1.8) -- Frequency of the state reset
-        if _G.InfJump then
-            local char = LocalPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                -- Bypass: Briefly set state to Landed to reset the kill-timer
-                hum:ChangeState(Enum.HumanoidStateType.Landed)
-                -- Spoofing a raycast check (some anti-cheats look for this)
-                hum.PlatformStand = false
-            end
-        end
+local player = Players.LocalPlayer
+local JUMP_POWER = 45
+local ENABLED = true
+
+local connection
+
+local function setupCharacter(character)
+    if connection then
+        connection:Disconnect()
     end
-end)
 
--- // SMOOTH JUMP EXECUTION
-local function ExecuteJump()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local humanoid = character:WaitForChild("Humanoid")
+    local root = character:WaitForChild("HumanoidRootPart")
 
-    if hrp and hum and _G.InfJump then
-        -- Instead of just "Jumping," we apply a Physics Impulse
-        -- This is harder for servers to distinguish from a normal jump
-        hrp.AssemblyLinearVelocity = Vector3.new(
-            hrp.AssemblyLinearVelocity.X, 
-            _G.JumpPower, 
-            hrp.AssemblyLinearVelocity.Z
+    connection = UserInputService.JumpRequest:Connect(function()
+        if not ENABLED then return end
+        if humanoid.Health <= 0 then return end
+
+        humanoid.AutoRotate = true
+        root.AssemblyAngularVelocity = Vector3.zero
+
+        root.AssemblyLinearVelocity = Vector3.new(
+            root.AssemblyLinearVelocity.X,
+            JUMP_POWER,
+            root.AssemblyLinearVelocity.Z
         )
-        -- Update state to 'Physics' to prevent state-lock deaths
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
-    end
+
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end)
 end
 
--- // BINDING
-UserInputService.JumpRequest:Connect(function()
-    task.wait(0.03) -- Mimics human input latency
-    pcall(ExecuteJump)
-end)
+if player.Character then
+    setupCharacter(player.Character)
+end
 
-print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
+player.CharacterAdded:Connect(setupCharacter)
