@@ -1933,29 +1933,34 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
 local function ExecuteJump()
     local char = game.Players.LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        -- Impedisce allo stato di bloccarsi e causare la morte
-        hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        
-        -- Applica la velocità
+        -- Usiamo una forza che non rompe lo stato dello Humanoid
+        -- Se muori ancora, abbassa 45 a 35 o 40
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
-            (_G.JumpPower or 50), 
+            (_G.JumpPower or 45), 
             hrp.AssemblyLinearVelocity.Z
         )
         
-        -- Opzionale: azzera la rotazione solo sull'asse X e Z per non cadere di lato
+        -- Invece di cambiare stato in Jumping o Physics (che ti killa)
+        -- resettiamo solo la rotazione sugli assi che ti fanno cadere
         hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
     end
 end
 
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    ExecuteJump()
+-- InputBegan è più sicuro di JumpRequest per evitare il "kick" per spam
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.Space then
+        ExecuteJump()
+    end
 end)
 -- // BINDING
 UserInputService.JumpRequest:Connect(function()
