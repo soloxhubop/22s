@@ -1934,26 +1934,22 @@ end)
 
 -- // SMOOTH JUMP EXECUTION
 local function ExecuteJump()
-    local char = LocalPlayer.Character
+    local char = game.Players.LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        -- 1. Resettiamo la velocità angolare per fermare rotazioni improvvise
-        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-
-        -- 2. Applichiamo la forza verso l'alto mantenendo la spinta direzionale attuale
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
-            _G.JumpPower or 50, 
+            (_G.JumpPower or 50), 
             hrp.AssemblyLinearVelocity.Z
         )
-
-        -- 3. Usiamo lo stato 'Land' o 'Jumping' per resettare la fisica interna
-        -- 'Land' è molto efficace per fermare rotazioni indesiderate
-        hum:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end
+
+game:GetService("UserInputService").JumpRequest:Connect(ExecuteJump)
 -- // BINDING
 UserInputService.JumpRequest:Connect(function()
     task.wait(0.03) -- Mimics human input latency
