@@ -1939,22 +1939,24 @@ local function ExecuteJump()
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
     if hrp and hum and _G.InfJump then
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        -- Impedisce allo stato di bloccarsi e causare la morte
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
         
+        -- Applica la velocità
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
             (_G.JumpPower or 50), 
             hrp.AssemblyLinearVelocity.Z
         )
         
-        task.wait(0.1)
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Falling)
-        end
+        -- Opzionale: azzera la rotazione solo sull'asse X e Z per non cadere di lato
+        hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
     end
 end
 
-game:GetService("UserInputService").JumpRequest:Connect(ExecuteJump)
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    ExecuteJump()
+end)
 -- // BINDING
 UserInputService.JumpRequest:Connect(function()
     task.wait(0.03) -- Mimics human input latency
