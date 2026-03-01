@@ -2010,3 +2010,63 @@ end
 
 -- Esegui la creazione
 createMeloskaButton()
+
+-- // STATISTICHE FISSE (FPS & PING) - MELOSKA HUB
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
+-- Creazione di una ScreenGui separata per evitare che venga nascosta dal Toggle
+local statsGui = Instance.new("ScreenGui")
+statsGui.Name = "MeloskaStatsFixed"
+statsGui.Parent = game:GetService("CoreGui") -- Rimane visibile anche se resetti o chiudi l'altra UI
+statsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local sFrame = Instance.new("Frame")
+local sCorner = Instance.new("UICorner")
+local sStroke = Instance.new("UIStroke")
+local sLabel = Instance.new("TextLabel")
+
+-- 1. Posizionamento in alto al centro
+sFrame.Name = "StatsDisplay"
+sFrame.Parent = statsGui
+sFrame.Size = UDim2.new(0, 140, 0, 30)
+sFrame.Position = UDim2.new(0.5, -70, 0, 5) -- Esattamente al centro in alto
+sFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Il tuo Nero Chiaro
+sFrame.BorderSizePixel = 0
+
+-- Lati curvi (Quadrato curvo come il bottone)
+sCorner.CornerRadius = UDim.new(0, 8)
+sCorner.Parent = sFrame
+
+-- Bordo sottile bianco
+sStroke.Thickness = 1.5
+sStroke.Color = Color3.fromRGB(255, 255, 255)
+sStroke.Parent = sFrame
+
+-- 2. Testo FPS e PING (Orizzontale per occupare meno spazio)
+sLabel.Parent = sFrame
+sLabel.Size = UDim2.new(1, 0, 1, 0)
+sLabel.BackgroundTransparency = 1
+sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+sLabel.TextSize = 13
+sLabel.Font = Enum.Font.GothamBold
+sLabel.Text = "FPS: -- | PING: --"
+
+-- 3. Logica di aggiornamento reale
+local lastUpdate = tick()
+local frames = 0
+
+RunService.RenderStepped:Connect(function()
+    frames = frames + 1
+    local now = tick()
+    
+    if now - lastUpdate >= 1 then
+        local fps = frames
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        
+        sLabel.Text = "FPS: " .. fps .. " | PING: " .. ping .. "ms"
+        
+        frames = 0
+        lastUpdate = now
+    end
+end)
