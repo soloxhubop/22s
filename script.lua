@@ -2078,57 +2078,46 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // MELOSKA HUB - TOTAL WHITE & REMOVE STARS
+-- // MELOSKA HUB - FORCE WHITE & DELETE STARS (ULTIMATE)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
-    local BIANCO_FORTE = Color3.fromRGB(255, 255, 255)
+    local BIANCO_ACCESO = Color3.fromRGB(255, 255, 255)
 
-    -- Funzione per pulire e colorare
-    local function CleanAndWhiten(obj)
-        -- 1. Forza il Bianco sui testi
+    -- Funzione distruttiva per stelle e forzatura colore
+    local function AbsoluteForce(obj)
+        -- 1. Forza il colore su tutto ciò che ha un testo
         if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-            obj.TextColor3 = BIANCO_FORTE
-            obj.TextStrokeTransparency = 0.8 -- Rende il testo più "bold" e leggibile
+            -- Usiamo pcall per evitare che lo script si fermi se una proprietà è protetta
+            pcall(function()
+                obj.TextColor3 = BIANCO_ACCESO
+                obj.TextTransparency = 0 -- Assicuriamoci che si veda bene
+            end)
         end
 
-        -- 2. Rimuove le particelle (Stelle, puntini, effetti scorrimento)
-        -- Molte UI usano ParticleEmitter o piccoli Frame per l'effetto stelle
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-            obj.Enabled = false -- Spegne le particelle
+        -- 2. Elimina le stelle (se sono ParticleEmitter)
+        if obj:IsA("ParticleEmitter") then
+            pcall(function() obj:Destroy() end)
         end
-        
-        -- Se le "stelle" sono piccoli quadratini/immagini (comune in molti Hub)
-        if (obj:IsA("Frame") or obj:IsA("ImageLabel")) and (obj.Name:lower():find("star") or obj.Name:lower():find("particle") or obj.Name:lower():find("dot")) then
-            obj.Visible = false -- Nasconde i frame che fungono da stelle
+
+        -- 3. Elimina le stelle (se sono immagini o quadratini nello sfondo)
+        -- Cerchiamo qualsiasi cosa che si muove o ha nomi sospetti
+        local n = obj.Name:lower()
+        if (obj:IsA("ImageLabel") or obj:IsA("Frame")) and 
+           (n:find("star") or n:find("particle") or n:find("dot") or n:find("effect")) then
+            pcall(function() obj:Destroy() end)
         end
     end
 
-    -- Trova l'Hub
-    local hub = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
-    
-    if hub then
-        -- Applica subito a tutto quello che esiste
-        for _, child in pairs(hub:GetDescendants()) do
-            CleanAndWhiten(child)
-        end
-
-        -- Resta in ascolto se l'Hub genera nuove stelle o testi (es. cambiando Tab)
-        hub.DescendantAdded:Connect(function(newObj)
-            task.wait() 
-            CleanAndWhiten(newObj)
-        end)
+    -- Loop infinito di controllo (Ogni 0.5 secondi ricontrolla tutto)
+    -- Serve se l'Hub ha un sistema che "protegge" i colori
+    while true do
+        local hub = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
         
-        print("Meloska Hub: UI Pulita e Testi Bianchi applicati!")
-    else
-        -- Riprova se l'Hub non è ancora apparso
-        for i = 1, 20 do
-            task.wait(1)
-            local retryHub = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
-            if retryHub then
-                for _, child in pairs(retryHub:GetDescendants()) do CleanAndWhiten(child) end
-                retryHub.DescendantAdded:Connect(CleanAndWhiten)
-                break
+        if hub then
+            for _, descendant in pairs(hub:GetDescendants()) do
+                AbsoluteForce(descendant)
             end
         end
+        task.wait(0.5) -- Non rallenta il gioco, ma tiene l'Hub sotto controllo
     end
 end)
