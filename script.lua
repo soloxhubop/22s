@@ -1908,44 +1908,40 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
--- // INFINITE JUMP 100% ANTI-MORTE - MELOSKA HUB
-local Player = game:GetService("Players").LocalPlayer
+-- // INFINITE JUMP ORIGINALE MODIFICATO - MELOSKA HUB
 local UserInputService = game:GetService("UserInputService")
-
--- CONFIGURAZIONE ULTRA-SICURA
-local JUMP_HEIGHT = 48 -- Leggermente SOTTO il salto normale (per non triggerare l'anti-cheat)
-local cooldown = 0.3   -- Cooldown più lungo per evitare di salire troppo in fretta
 local canJump = true
+local cooldownTime = 0.2
 
-UserInputService.JumpRequest:Connect(function()
-    local char = Player.Character
+-- CONFIGURAZIONE POTENZA
+local POWER_LEVEL = 52 -- Originale era 45. 52 è un po' più alto ma sicuro.
+
+local function ExecuteJump()
+    local char = game.Players.LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-    -- Se InfJump è attivo, il personaggio è vivo e il cooldown è passato
-    if _G.InfJump and canJump and hum and hum.Health > 0 and hrp then
+    -- Controlliamo che InfJump sia attivo e che il cooldown sia passato
+    if hrp and hum and _G.InfJump and canJump then
         canJump = false
         
-        -- RESET DELLA CADUTA: Prima di saltare, azzeriamo la velocità di caduta
-        -- Questo evita che la velocità si accumuli e il gioco ti uccida
+        -- Reset rotazione per stabilità (dal tuo codice originale)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
+
+        -- Applichiamo la spinta verso l'alto
         hrp.AssemblyLinearVelocity = Vector3.new(
             hrp.AssemblyLinearVelocity.X, 
-            0, -- Azzera la caduta
-            hrp.AssemblyLinearVelocity.Z
-        )
-        
-        -- PICCOLO IMPULSO VERSO L'ALTO
-        -- Usiamo una forza manuale invece di hum:ChangeState per essere invisibili
-        hrp.AssemblyLinearVelocity = Vector3.new(
-            hrp.AssemblyLinearVelocity.X, 
-            JUMP_HEIGHT, 
+            POWER_LEVEL, 
             hrp.AssemblyLinearVelocity.Z
         )
 
-        task.wait(cooldown)
+        task.wait(cooldownTime)
         canJump = true
     end
-end)
+end
+
+-- Collegamento all'input del salto
+UserInputService.JumpRequest:Connect(ExecuteJump)
 
 UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.Space then
