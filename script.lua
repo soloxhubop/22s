@@ -1957,43 +1957,64 @@ end)
 
 print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
 
--- // BOTTONE MOBILE MELOSKA HUB (🌌)
-local toggleBtn = Instance.new("TextButton")
+-- // BOTTONE MOBILE PRO - MELOSKA HUB
+local toggleBtn = Instance.new("ImageButton") -- Usiamo ImageButton per l'immagine
 local uiCorner = Instance.new("UICorner")
 local uiStroke = Instance.new("UIStroke")
+local uiGradient = Instance.new("UIGradient")
 
--- Configurazione Estetica e Posizione
+-- Configurazione Base
 toggleBtn.Name = "MobileToggle"
-toggleBtn.Parent = sg -- Assicurati che 'sg' sia il nome della tua ScreenGui
-toggleBtn.Size = UDim2.new(0, 60, 0, 60) -- Un po' più grande per facilità di tocco
-toggleBtn.Position = UDim2.new(0, 20, 0.5, -30) -- Posizionato a sinistra al centro
-toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Nero chiaro
-toggleBtn.Text = "🌌" -- L'emoji richiesta
-toggleBtn.TextSize = 30
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.Parent = sg
+toggleBtn.Size = UDim2.new(0, 65, 0, 65)
+toggleBtn.Position = UDim2.new(0, 20, 0.5, -32)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35) -- Nero chiaro/antracite
+toggleBtn.BorderSizePixel = 0
 toggleBtn.Active = true
-toggleBtn.Draggable = true -- Trascinalo dove vuoi col dito!
-toggleBtn.ZIndex = 10 -- Per essere sicuro che stia sopra a tutto
+toggleBtn.Draggable = true
+toggleBtn.ZIndex = 10
 
--- Arrotondamento
+-- AGGIUNGI QUI LA TUA IMMAGINE
+-- Se è un'emoji, usa toggleBtn.Text (ma questo è un ImageButton). 
+-- Se hai un ID immagine mettilo qui sotto:
+toggleBtn.Image = "rbxassetid://0" -- Sostituisci lo 0 con il tuo ID immagine
+toggleBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Arrotondamento perfetto
 uiCorner.CornerRadius = UDim.new(1, 0)
 uiCorner.Parent = toggleBtn
 
--- Bordino Bianco per visibilità
-uiStroke.Parent = toggleBtn
-uiStroke.Thickness = 2
-uiStroke.Color = Color3.fromRGB(255, 255, 255)
+-- Bordino sfumato (UIStroke + Gradient)
+uiStroke.Thickness = 3
 uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Parent = toggleBtn
 
--- Funzione Apri/Chiudi
+uiGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), -- Bianco
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))  -- Grigio
+})
+uiGradient.Rotation = 45
+uiGradient.Parent = uiStroke
+
+-- EFFETTO PRESSIONE (Feedback visivo)
+toggleBtn.MouseButton1Down:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+
+toggleBtn.MouseButton1Up:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 65, 0, 65)}):Play()
+end)
+
+-- Funzione Apri/Chiudi con Dissolvenza (Tween)
 local menuVisible = true
 toggleBtn.MouseButton1Click:Connect(function()
     menuVisible = not menuVisible
-    -- Cerca il frame principale della tua UI per nasconderlo/mostrarlo
     for _, child in pairs(sg:GetChildren()) do
         if child:IsA("Frame") or child:IsA("CanvasGroup") then
             if child.Name ~= "MobileToggle" then
+                -- Effetto comparsa/scomparsa fluido
+                local targetTransparency = menuVisible and 0 or 1
+                TweenService:Create(child, TweenInfo.new(0.3), {BackgroundTransparency = targetTransparency}):Play()
                 child.Visible = menuVisible
             end
         end
