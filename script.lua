@@ -1908,39 +1908,35 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
--- // INFINITE JUMP "GENTILE" (ANTI-MORTE) - MELOSKA HUB
+-- // INFINITE JUMP SUPER SAFE - MELOSKA HUB
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
--- CONFIGURAZIONE
-local JUMP_POWER = 60 -- Un po' più cauto per evitare glitch
+-- CONFIGURAZIONE MOLTO CAUTA
+local JUMP_POWER = 55 -- Solo 5 punti sopra il normale (molto sicuro)
 local canJump = true
 
--- Applica la potenza solo quando necessario
-local function ApplyPower(char)
+local function ApplySafePower(char)
     local hum = char:WaitForChild("Humanoid")
     hum.JumpPower = JUMP_POWER
     hum.UseJumpPower = true
 end
 
-Player.CharacterAdded:Connect(ApplyPower)
-if Player.Character then ApplyPower(Player.Character) end
+Player.CharacterAdded:Connect(ApplySafePower)
+if Player.Character then ApplySafePower(Player.Character) end
 
--- Logica Salto Infinito
 UserInputService.JumpRequest:Connect(function()
     local char = Player.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-    -- Controlliamo che l'infjump sia attivo e che il personaggio sia vivo
-    if hum and hum.Health > 0 and _G.InfJump and canJump then
+    
+    -- Controlliamo se InfJump è attivo e se il cooldown è passato
+    if hum and _G.InfJump and canJump then
         canJump = false
         
-        -- Invece di forzare il salto, resettiamo la velocità verticale e diamo un piccolo impulso
-        -- Questo evita che il gioco ti uccida per "velocità eccessiva"
-        hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, JUMP_POWER, hrp.AssemblyLinearVelocity.Z)
+        -- Cambiamo lo stato in Jumping senza forzare la velocità lineare
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
         
-        task.wait(0.15) -- Cooldown leggermente più corto per fluidità
+        task.wait(0.2) -- Cooldown leggermente più lungo per sicurezza
         canJump = true
     end
 end)
