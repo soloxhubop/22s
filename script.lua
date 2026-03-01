@@ -1957,67 +1957,58 @@ end)
 
 print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
 
--- // CONFIGURAZIONE FINALE MELOSKA HUB
-local C = { 
-    bg = Color3.fromRGB(25, 25, 28),         -- NERO CHIARO
-    purple = Color3.fromRGB(255, 255, 255), 
-    text = Color3.fromRGB(255, 255, 255),    -- BIANCO
-    textDim = Color3.fromRGB(200, 200, 200),
-    accent = Color3.fromRGB(255, 255, 255),
-    border = Color3.fromRGB(60, 60, 65)
-}
-
--- Rimuovi vecchi bottoni (per evitare duplicati o conflitti)
+-- // RIMOZIONE VECCHI BOTTONI
 if sg:FindFirstChild("MobileToggle") then
     sg.MobileToggle:Destroy()
 end
 
--- // BOTTONE IMMAGINE STILE GALASSIA - MELOSKA HUB
-local toggleBtn = Instance.new("ImageButton")
+-- // BOTTONE QUADRATO CURVO MELOSKA HUB 🌌
+local toggleBtn = Instance.new("TextButton")
 local uiCorner = Instance.new("UICorner")
 local uiStroke = Instance.new("UIStroke")
+local uiPadding = Instance.new("UIPadding")
 
 toggleBtn.Name = "MobileToggle"
 toggleBtn.Parent = sg
-toggleBtn.Size = UDim2.new(0, 65, 0, 65) -- Dimensione del bottone
-toggleBtn.Position = UDim2.new(0, 15, 0.5, -32) -- Posizionato a sinistra
-toggleBtn.BackgroundColor3 = C.bg -- Sfondo nero chiaro del bottone
+toggleBtn.Size = UDim2.new(0, 60, 0, 60) -- Dimensione esterna
+toggleBtn.Position = UDim2.new(0, 20, 0.5, -30)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Nero chiaro
 toggleBtn.BorderSizePixel = 0
 toggleBtn.Active = true
-toggleBtn.Draggable = true -- Trascinalo col dito!
-toggleBtn.ZIndex = 100 -- Assicura che sia sempre in primo piano
+toggleBtn.Draggable = true -- TRASCINALO COL DITO
+toggleBtn.ZIndex = 100
 
--- ICONA GALASSIA (ID selezionato per te)
-toggleBtn.Image = "rbxassetid://10734950309" 
-toggleBtn.ImageColor3 = Color3.fromRGB(255, 255, 255) -- L'immagine sarà bianca
-toggleBtn.ScaleType = Enum.ScaleType.Fit
-toggleBtn.ImageTransparency = 0.1 -- Leggera trasparenza per un tocco moderno
+-- TESTO / EMOJI
+toggleBtn.Text = "🌌"
+toggleBtn.TextSize = 28 -- Leggermente più piccola per l'effetto "logo"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
 
--- Arrotondamento perfetto (lo rende tondo)
-uiCorner.CornerRadius = UDim.new(1, 0)
+-- ARROTONDAMENTO LATI (Quadrato curvo)
+uiCorner.CornerRadius = UDim.new(0, 12) -- 12px rende i lati curvi ma non tondi
 uiCorner.Parent = toggleBtn
 
--- Bordo Bianco visibile (per spiccare sullo sfondo)
-uiStroke.Thickness = 3
+-- BORDO BIANCO
+uiStroke.Thickness = 2.5
 uiStroke.Color = Color3.fromRGB(255, 255, 255)
 uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 uiStroke.Parent = toggleBtn
 
--- Funzione Toggle (Apri/Chiudi la UI) con animazione di pressione
+-- FUNZIONE TOGGLE
 local menuVisible = true
 toggleBtn.MouseButton1Click:Connect(function()
     menuVisible = not menuVisible
     
-    -- Effetto di pressione fluida
-    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    TweenService:Create(toggleBtn, tweenInfo, {Size = UDim2.new(0, 58, 0, 58)}):Play()
+    -- Animazione pressione veloce
+    local ts = game:GetService("TweenService")
+    ts:Create(toggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 55, 0, 55)}):Play()
     task.wait(0.1)
-    TweenService:Create(toggleBtn, tweenInfo, {Size = UDim2.new(0, 65, 0, 65)}):Play()
+    ts:Create(toggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 60, 0, 60)}):Play()
 
-    -- Nasconde/Mostra tutti gli altri elementi della UI
+    -- Nasconde/Mostra la UI
     for _, child in pairs(sg:GetChildren()) do
         if child:IsA("Frame") or child:IsA("CanvasGroup") then
-            if child.Name ~= "MobileToggle" then -- Non nasconde il bottone stesso
+            if child.Name ~= "MobileToggle" then
                 child.Visible = menuVisible
             end
         end
