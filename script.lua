@@ -1171,31 +1171,6 @@ task.spawn(function()
     end
 end)
 
-for i = 1, 12 do
-    local ball = Instance.new("Frame", progressBar)
-    ball.Size = UDim2.new(0, math.random(2, 3), 0, math.random(2, 3))
-    ball.Position = UDim2.new(math.random(3, 97) / 100, 0, math.random(15, 85) / 100, 0)
-    ball.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-    ball.BackgroundTransparency = math.random(20, 50) / 100
-    ball.BorderSizePixel = 0
-    ball.ZIndex = 1
-    Instance.new("UICorner", ball).CornerRadius = UDim.new(1, 0)
-    
-    task.spawn(function()
-        local startX = ball.Position.X.Scale
-        local startY = ball.Position.Y.Scale
-        local phase = math.random() * math.pi * 2
-        while ball.Parent do
-            local t = tick() + phase
-            local newX = startX + math.sin(t * (0.5 + i * 0.1)) * 0.03
-            local newY = startY + math.cos(t * (0.4 + i * 0.08)) * 0.05
-            ball.Position = UDim2.new(math.clamp(newX, 0.02, 0.98), 0, math.clamp(newY, 0.1, 0.9), 0)
-            ball.BackgroundTransparency = 0.3 + math.sin(t * 2) * 0.2
-            task.wait(0.03)
-        end
-    end)
-end
-
 ProgressLabel = Instance.new("TextLabel", progressBar)
 ProgressLabel.Size = UDim2.new(0.35, 0, 0.5, 0)
 ProgressLabel.Position = UDim2.new(0, 10 * guiScale, 0, 0)
