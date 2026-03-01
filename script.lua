@@ -2078,105 +2078,57 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // INIEZIONE FOV "CHIRURGICA" - MELOSKA DUELS
+-- // MELOSKA HUB - TOTAL WHITE & REMOVE STARS
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
-    local UIS = game:GetService("UserInputService")
-    
-    -- Aspettiamo un tempo generoso per il caricamento
-    task.wait(5)
+    local BIANCO_FORTE = Color3.fromRGB(255, 255, 255)
 
-    local function FindAndInject()
-        local targetFrame = nil
-        
-        -- Cerchiamo lo switch dell'Anti Ragdoll o il testo
-        for _, v in pairs(CoreGui:GetDescendants()) do
-            if (v:IsA("TextLabel") or v:IsA("TextButton")) and v.Text:find("Anti Ragdoll") then
-                -- Abbiamo trovato la riga dell'Anti Ragdoll
-                targetFrame = v.Parent -- Questo dovrebbe essere il frame della riga
-                break
-            end
+    -- Funzione per pulire e colorare
+    local function CleanAndWhiten(obj)
+        -- 1. Forza il Bianco sui testi
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            obj.TextColor3 = BIANCO_FORTE
+            obj.TextStrokeTransparency = 0.8 -- Rende il testo più "bold" e leggibile
         end
 
-        if targetFrame and targetFrame.Parent then
-            -- Creiamo il nuovo pezzo per il FOV
-            local fovRow = Instance.new("Frame")
-            fovRow.Name = "FOV_Row_Added"
-            fovRow.Parent = targetFrame.Parent -- Lo mettiamo nello stesso contenitore della colonna
-            fovRow.Size = targetFrame.Size -- Copiamo la dimensione esatta della riga Anti Ragdoll
-            fovRow.BackgroundTransparency = 1
-            
-            -- Cerchiamo di forzare la posizione sotto Anti Ragdoll
-            if targetFrame:IsA("GuiObject") then
-                fovRow.LayoutOrder = targetFrame.LayoutOrder + 1
-            end
-
-            -- Titolo (Stile identico all'Hub)
-            local label = Instance.new("TextLabel", fovRow)
-            label.Size = UDim2.new(1, 0, 0, 15)
-            label.BackgroundTransparency = 1
-            label.Text = "Field of View: 70"
-            label.TextColor3 = Color3.fromRGB(255, 255, 255)
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 11
-            label.TextXAlignment = Enum.TextXAlignment.Left
-
-            -- Barra dello Slider (Blu Meloska)
-            local bar = Instance.new("Frame", fovRow)
-            bar.Name = "SliderBar"
-            bar.Size = UDim2.new(0.85, 0, 0, 3)
-            bar.Position = UDim2.new(0, 0, 0.75, 0)
-            bar.BackgroundColor3 = Color3.fromRGB(50, 120, 255) -- Il blu della tua foto
-            bar.BorderSizePixel = 0
-            Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
-
-            -- Pallino (Bianco)
-            local dot = Instance.new("Frame", bar)
-            dot.Size = UDim2.new(0, 10, 0, 10)
-            dot.AnchorPoint = Vector2.new(0.5, 0.5)
-            dot.Position = UDim2.new(0, 0, 0.5, 0) -- Inizia a 70
-            dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-
-            -- Logica di movimento
-            local cam = workspace.CurrentCamera
-            local dragging = false
-
-            local function update(input)
-                local barAbsPos = bar.AbsolutePosition.X
-                local barAbsSize = bar.AbsoluteSize.X
-                local inputPos = input.Position.X
-                local percentage = math.clamp((inputPos - barAbsPos) / barAbsSize, 0, 1)
-                
-                dot.Position = UDim2.new(percentage, 0, 0.5, 0)
-                local fovVal = math.floor(70 + (percentage * 50))
-                cam.FieldOfView = fovVal
-                label.Text = "Field of View: " .. fovVal
-            end
-
-            dot.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                end
-            end)
-
-            UIS.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
-            end)
-
-            UIS.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    update(input)
-                end
-            end)
-            
-            print("Meloska Hub: FOV iniettato con successo!")
-        else
-            print("Meloska Hub: Impossibile trovare il punto di iniezione.")
+        -- 2. Rimuove le particelle (Stelle, puntini, effetti scorrimento)
+        -- Molte UI usano ParticleEmitter o piccoli Frame per l'effetto stelle
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+            obj.Enabled = false -- Spegne le particelle
+        end
+        
+        -- Se le "stelle" sono piccoli quadratini/immagini (comune in molti Hub)
+        if (obj:IsA("Frame") or obj:IsA("ImageLabel")) and (obj.Name:lower():find("star") or obj.Name:lower():find("particle") or obj.Name:lower():find("dot")) then
+            obj.Visible = false -- Nasconde i frame che fungono da stelle
         end
     end
 
-    FindAndInject()
+    -- Trova l'Hub
+    local hub = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
+    
+    if hub then
+        -- Applica subito a tutto quello che esiste
+        for _, child in pairs(hub:GetDescendants()) do
+            CleanAndWhiten(child)
+        end
+
+        -- Resta in ascolto se l'Hub genera nuove stelle o testi (es. cambiando Tab)
+        hub.DescendantAdded:Connect(function(newObj)
+            task.wait() 
+            CleanAndWhiten(newObj)
+        end)
+        
+        print("Meloska Hub: UI Pulita e Testi Bianchi applicati!")
+    else
+        -- Riprova se l'Hub non è ancora apparso
+        for i = 1, 20 do
+            task.wait(1)
+            local retryHub = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
+            if retryHub then
+                for _, child in pairs(retryHub:GetDescendants()) do CleanAndWhiten(child) end
+                retryHub.DescendantAdded:Connect(CleanAndWhiten)
+                break
+            end
+        end
+    end
 end)
