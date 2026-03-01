@@ -2077,3 +2077,82 @@ RunService.RenderStepped:Connect(function()
         lastUpdate = now
     end
 end)
+
+-- // INTEGRAZIONE FOV 100% IDENTICA - MELOSKA HUB
+task.spawn(function()
+    local CoreGui = game:GetService("CoreGui")
+    local UIS = game:GetService("UserInputService")
+    
+    -- 1. Trova la UI e un bottone di riferimento (Anti-Ragdoll)
+    local target = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChildOfClass("ScreenGui")
+    if not target then return end
+
+    local scroll = target:FindFirstChildWhichIsA("ScrollingFrame", true)
+    local refBtn = scroll and (scroll:FindFirstChild("Anti-Ragdoll") or scroll:FindFirstChildWhichIsA("TextButton"))
+    
+    if scroll and refBtn then
+        -- 2. Creazione Frame con lo stesso stile del riferimento
+        local fovFrame = Instance.new("Frame")
+        fovFrame.Name = "ZZ_FOV"
+        fovFrame.Parent = scroll
+        fovFrame.Size = UDim2.new(refBtn.Size.X.Scale, refBtn.Size.X.Offset, 0, 55) -- Altezza leggermente maggiore per lo slider
+        fovFrame.BackgroundTransparency = 1
+
+        -- 3. Etichetta Testo (Copia esatta del colore e font del bottone)
+        local label = Instance.new("TextLabel", fovFrame)
+        label.Size = UDim2.new(1, 0, 0, 20)
+        label.BackgroundTransparency = 1
+        label.Text = "FIELD OF VIEW: 70"
+        label.TextColor3 = refBtn.TextColor3 -- Prende lo stesso colore della scritta Anti-Ragdoll
+        label.Font = refBtn.Font -- Prende lo stesso font
+        label.TextSize = refBtn.TextSize - 2
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        -- 4. Barra Slider (Usa il colore del bordo o del testo con trasparenza)
+        local bar = Instance.new("Frame", fovFrame)
+        bar.Size = UDim2.new(1, 0, 0, 4)
+        bar.Position = UDim2.new(0, 0, 0.7, 0)
+        bar.BackgroundColor3 = refBtn.TextColor3
+        bar.BackgroundTransparency = 0.6
+        bar.BorderSizePixel = 0
+        Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+        -- 5. Pallino (Copia il colore del testo per essere coordinato)
+        local dot = Instance.new("Frame", bar)
+        dot.Size = UDim2.new(0, 14, 0, 14)
+        dot.AnchorPoint = Vector2.new(0.5, 0.5)
+        dot.Position = UDim2.new(0, 0, 0.5, 0)
+        dot.BackgroundColor3 = refBtn.TextColor3
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+        -- 6. Logica di trascinamento
+        local cam = workspace.CurrentCamera
+        local dragging = false
+
+        local function update(input)
+            local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+            dot.Position = UDim2.new(pos, 0, 0.5, 0)
+            local fovValue = math.floor(70 + (pos * 50))
+            cam.FieldOfView = fovValue
+            label.Text = "FIELD OF VIEW: " .. fovValue
+        end
+
+        dot.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+                update(input)
+            end
+        end)
+    end
+end)
