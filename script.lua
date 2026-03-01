@@ -1908,35 +1908,41 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
--- // INFINITE JUMP SUPER SAFE - MELOSKA HUB
+-- // INFINITE JUMP 100% ANTI-MORTE - MELOSKA HUB
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
--- CONFIGURAZIONE MOLTO CAUTA
-local JUMP_POWER = 55 -- Solo 5 punti sopra il normale (molto sicuro)
+-- CONFIGURAZIONE ULTRA-SICURA
+local JUMP_HEIGHT = 48 -- Leggermente SOTTO il salto normale (per non triggerare l'anti-cheat)
+local cooldown = 0.3   -- Cooldown più lungo per evitare di salire troppo in fretta
 local canJump = true
-
-local function ApplySafePower(char)
-    local hum = char:WaitForChild("Humanoid")
-    hum.JumpPower = JUMP_POWER
-    hum.UseJumpPower = true
-end
-
-Player.CharacterAdded:Connect(ApplySafePower)
-if Player.Character then ApplySafePower(Player.Character) end
 
 UserInputService.JumpRequest:Connect(function()
     local char = Player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
-    
-    -- Controlliamo se InfJump è attivo e se il cooldown è passato
-    if hum and _G.InfJump and canJump then
+
+    -- Se InfJump è attivo, il personaggio è vivo e il cooldown è passato
+    if _G.InfJump and canJump and hum and hum.Health > 0 and hrp then
         canJump = false
         
-        -- Cambiamo lo stato in Jumping senza forzare la velocità lineare
-        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        -- RESET DELLA CADUTA: Prima di saltare, azzeriamo la velocità di caduta
+        -- Questo evita che la velocità si accumuli e il gioco ti uccida
+        hrp.AssemblyLinearVelocity = Vector3.new(
+            hrp.AssemblyLinearVelocity.X, 
+            0, -- Azzera la caduta
+            hrp.AssemblyLinearVelocity.Z
+        )
         
-        task.wait(0.2) -- Cooldown leggermente più lungo per sicurezza
+        -- PICCOLO IMPULSO VERSO L'ALTO
+        -- Usiamo una forza manuale invece di hum:ChangeState per essere invisibili
+        hrp.AssemblyLinearVelocity = Vector3.new(
+            hrp.AssemblyLinearVelocity.X, 
+            JUMP_HEIGHT, 
+            hrp.AssemblyLinearVelocity.Z
+        )
+
+        task.wait(cooldown)
         canJump = true
     end
 end)
