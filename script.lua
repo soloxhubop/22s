@@ -1908,38 +1908,39 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
--- // INFINITE JUMP AGGIORNATO (SOSTITUISCI IL VECCHIO)
+-- // INFINITE JUMP "GENTILE" (ANTI-MORTE) - MELOSKA HUB
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
 -- CONFIGURAZIONE
-local JUMP_POWER = 62 -- 50 è il normale, 62 è "poco poco" più veloce
-local cooldownTime = 0.2
+local JUMP_POWER = 60 -- Un po' più cauto per evitare glitch
 local canJump = true
 
--- Funzione per applicare la potenza al personaggio
-local function SetPower(char)
+-- Applica la potenza solo quando necessario
+local function ApplyPower(char)
     local hum = char:WaitForChild("Humanoid")
     hum.JumpPower = JUMP_POWER
     hum.UseJumpPower = true
 end
 
-if Player.Character then SetPower(Player.Character) end
-Player.CharacterAdded:Connect(SetPower)
+Player.CharacterAdded:Connect(ApplyPower)
+if Player.Character then ApplyPower(Player.Character) end
 
 -- Logica Salto Infinito
 UserInputService.JumpRequest:Connect(function()
     local char = Player.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
-    if hum and _G.InfJump and canJump then
+    -- Controlliamo che l'infjump sia attivo e che il personaggio sia vivo
+    if hum and hum.Health > 0 and _G.InfJump and canJump then
         canJump = false
         
-        -- Applica forza e cambia stato
-        hum.JumpPower = JUMP_POWER
-        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        -- Invece di forzare il salto, resettiamo la velocità verticale e diamo un piccolo impulso
+        -- Questo evita che il gioco ti uccida per "velocità eccessiva"
+        hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, JUMP_POWER, hrp.AssemblyLinearVelocity.Z)
         
-        task.wait(cooldownTime)
+        task.wait(0.15) -- Cooldown leggermente più corto per fluidità
         canJump = true
     end
 end)
