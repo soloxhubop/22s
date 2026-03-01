@@ -2011,62 +2011,85 @@ end
 -- Esegui la creazione
 createMeloskaButton()
 
--- // STATISTICHE FISSE (FPS & PING) - MELOSKA HUB
-local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
+-- // FUNZIONE PER TROVARE LA GUI DI MELOSKA
+local function getGui()
+    -- Cerca la ScreenGui che abbiamo rinominato prima
+    return game:GetService("CoreGui"):FindFirstChild("Meloska Hub Duels") or 
+           game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("Meloska Hub Duels") or
+           game:GetService("CoreGui"):FindFirstChildOfClass("ScreenGui")
+end
 
--- Creazione di una ScreenGui separata per evitare che venga nascosta dal Toggle
-local statsGui = Instance.new("ScreenGui")
-statsGui.Name = "MeloskaStatsFixed"
-statsGui.Parent = game:GetService("CoreGui") -- Rimane visibile anche se resetti o chiudi l'altra UI
-statsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local targetGui = getGui()
 
-local sFrame = Instance.new("Frame")
-local sCorner = Instance.new("UICorner")
-local sStroke = Instance.new("UIStroke")
-local sLabel = Instance.new("TextLabel")
+if targetGui then
+    -- // 1. CREAZIONE BOTTONE QUADRATO CURVO 🌌
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Name = "MobileToggle"
+    toggleBtn.Parent = targetGui
+    toggleBtn.Size = UDim2.new(0, 60, 0, 60)
+    toggleBtn.Position = UDim2.new(0, 20, 0.5, -30)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+    toggleBtn.Text = "🌌"
+    toggleBtn.TextSize = 28
+    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleBtn.Font = Enum.Font.GothamBold
+    toggleBtn.ZIndex = 1000
+    toggleBtn.Draggable = true
 
--- 1. Posizionamento in alto al centro
-sFrame.Name = "StatsDisplay"
-sFrame.Parent = statsGui
-sFrame.Size = UDim2.new(0, 140, 0, 30)
-sFrame.Position = UDim2.new(0.5, -70, 0, 5) -- Esattamente al centro in alto
-sFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Il tuo Nero Chiaro
-sFrame.BorderSizePixel = 0
-
--- Lati curvi (Quadrato curvo come il bottone)
-sCorner.CornerRadius = UDim.new(0, 8)
-sCorner.Parent = sFrame
-
--- Bordo sottile bianco
-sStroke.Thickness = 1.5
-sStroke.Color = Color3.fromRGB(255, 255, 255)
-sStroke.Parent = sFrame
-
--- 2. Testo FPS e PING (Orizzontale per occupare meno spazio)
-sLabel.Parent = sFrame
-sLabel.Size = UDim2.new(1, 0, 1, 0)
-sLabel.BackgroundTransparency = 1
-sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-sLabel.TextSize = 13
-sLabel.Font = Enum.Font.GothamBold
-sLabel.Text = "FPS: -- | PING: --"
-
--- 3. Logica di aggiornamento reale
-local lastUpdate = tick()
-local frames = 0
-
-RunService.RenderStepped:Connect(function()
-    frames = frames + 1
-    local now = tick()
+    local btnCorner = Instance.new("UICorner", toggleBtn)
+    btnCorner.CornerRadius = UDim.new(0, 12)
     
-    if now - lastUpdate >= 1 then
-        local fps = frames
-        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-        
-        sLabel.Text = "FPS: " .. fps .. " | PING: " .. ping .. "ms"
-        
-        frames = 0
-        lastUpdate = now
-    end
-end)
+    local btnStroke = Instance.new("UIStroke", toggleBtn)
+    btnStroke.Thickness = 2.5
+    btnStroke.Color = Color3.fromRGB(255, 255, 255)
+
+    -- Funzione Apri/Chiudi
+    local menuVisible = true
+    toggleBtn.MouseButton1Click:Connect(function()
+        menuVisible = not menuVisible
+        for _, child in pairs(targetGui:GetChildren()) do
+            if (child:IsA("Frame") or child:IsA("CanvasGroup")) and child.Name ~= "MobileToggle" then
+                child.Visible = menuVisible
+            end
+        end
+    end)
+
+    -- // 2. CREAZIONE FPS & PING (IN ALTO FISSO)
+    local statsFrame = Instance.new("Frame")
+    statsFrame.Name = "MeloskaStats"
+    statsFrame.Parent = targetGui
+    statsFrame.Size = UDim2.new(0, 140, 0, 30)
+    statsFrame.Position = UDim2.new(0.5, -70, 0, 5)
+    statsFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+    statsFrame.ZIndex = 1000
+
+    local sCorner = Instance.new("UICorner", statsFrame)
+    sCorner.CornerRadius = UDim.new(0, 8)
+
+    local sStroke = Instance.new("UIStroke", statsFrame)
+    sStroke.Thickness = 1.5
+    sStroke.Color = Color3.fromRGB(255, 255, 255)
+
+    local sLabel = Instance.new("TextLabel", statsFrame)
+    sLabel.Size = UDim2.new(1, 0, 1, 0)
+    sLabel.BackgroundTransparency = 1
+    sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sLabel.TextSize = 13
+    sLabel.Font = Enum.Font.GothamBold
+    sLabel.Text = "Caricamento..."
+
+    -- Logica FPS/Ping
+    local lastUpdate = tick()
+    local frames = 0
+    game:GetService("RunService").RenderStepped:Connect(function()
+        frames = frames + 1
+        if tick() - lastUpdate >= 1 then
+            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+            sLabel.Text = "FPS: " .. frames .. " | PING: " .. ping .. "ms"
+            frames = 0
+            lastUpdate = tick()
+        end
+    end)
+else
+    warn("Meloska Hub: ScreenGui non trovata! Controlla il nome dello script.")
+end
