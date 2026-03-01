@@ -1957,60 +1957,56 @@ end)
 
 print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
 
--- // RIMOZIONE VECCHI BOTTONI
-if sg:FindFirstChild("MobileToggle") then
-    sg.MobileToggle:Destroy()
-end
-
--- // BOTTONE QUADRATO CURVO MELOSKA HUB 🌌
-local toggleBtn = Instance.new("TextButton")
-local uiCorner = Instance.new("UICorner")
-local uiStroke = Instance.new("UIStroke")
-local uiPadding = Instance.new("UIPadding")
-
-toggleBtn.Name = "MobileToggle"
-toggleBtn.Parent = sg
-toggleBtn.Size = UDim2.new(0, 60, 0, 60) -- Dimensione esterna
-toggleBtn.Position = UDim2.new(0, 20, 0.5, -30)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Nero chiaro
-toggleBtn.BorderSizePixel = 0
-toggleBtn.Active = true
-toggleBtn.Draggable = true -- TRASCINALO COL DITO
-toggleBtn.ZIndex = 100
-
--- TESTO / EMOJI
-toggleBtn.Text = "🌌"
-toggleBtn.TextSize = 28 -- Leggermente più piccola per l'effetto "logo"
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.Font = Enum.Font.GothamBold
-
--- ARROTONDAMENTO LATI (Quadrato curvo)
-uiCorner.CornerRadius = UDim.new(0, 12) -- 12px rende i lati curvi ma non tondi
-uiCorner.Parent = toggleBtn
-
--- BORDO BIANCO
-uiStroke.Thickness = 2.5
-uiStroke.Color = Color3.fromRGB(255, 255, 255)
-uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-uiStroke.Parent = toggleBtn
-
--- FUNZIONE TOGGLE
-local menuVisible = true
-toggleBtn.MouseButton1Click:Connect(function()
-    menuVisible = not menuVisible
-    
-    -- Animazione pressione veloce
-    local ts = game:GetService("TweenService")
-    ts:Create(toggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 55, 0, 55)}):Play()
-    task.wait(0.1)
-    ts:Create(toggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 60, 0, 60)}):Play()
-
-    -- Nasconde/Mostra la UI
-    for _, child in pairs(sg:GetChildren()) do
-        if child:IsA("Frame") or child:IsA("CanvasGroup") then
-            if child.Name ~= "MobileToggle" then
-                child.Visible = menuVisible
-            end
+-- // RESET TOTALE E NUOVO BOTTONE QUADRATO CURVO
+local function createMeloskaButton()
+    -- 1. Distrugge assolutamente ogni vecchio bottone esistente
+    for _, old in pairs(sg:GetChildren()) do
+        if old.Name == "MobileToggle" then
+            old:Destroy()
         end
     end
-end)
+
+    local toggleBtn = Instance.new("TextButton")
+    local uiCorner = Instance.new("UICorner")
+    local uiStroke = Instance.new("UIStroke")
+
+    -- 2. Impostazioni Base
+    toggleBtn.Name = "MobileToggle"
+    toggleBtn.Parent = sg
+    toggleBtn.Size = UDim2.new(0, 55, 0, 55) -- Leggermente più piccolo
+    toggleBtn.Position = UDim2.new(0, 15, 0.5, -27)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Nero Meloska
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.ZIndex = 999 -- Sempre in primo piano
+    toggleBtn.Draggable = true
+    
+    -- 3. Emoji 🌌 più piccola (Logo style)
+    toggleBtn.Text = "🌌"
+    toggleBtn.TextSize = 25 -- Ridotta per stare bene nel quadrato
+    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleBtn.Font = Enum.Font.GothamBold
+
+    -- 4. Lati Curvi (Non tondo)
+    uiCorner.CornerRadius = UDim.new(0, 10) -- Valore perfetto per quadrato curvo
+    uiCorner.Parent = toggleBtn
+
+    -- 5. Bordo Bianco
+    uiStroke.Thickness = 2
+    uiStroke.Color = Color3.fromRGB(255, 255, 255)
+    uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    uiStroke.Parent = toggleBtn
+
+    -- 6. Funzione Apri/Chiudi
+    local visible = true
+    toggleBtn.MouseButton1Click:Connect(function()
+        visible = not visible
+        for _, obj in pairs(sg:GetChildren()) do
+            if (obj:IsA("Frame") or obj:IsA("CanvasGroup")) and obj.Name ~= "MobileToggle" then
+                obj.Visible = visible
+            end
+        end
+    end)
+end
+
+-- Esegui la creazione
+createMeloskaButton()
