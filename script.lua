@@ -1957,64 +1957,67 @@ end)
 
 print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
 
--- // BOTTONE MOBILE PRO - MELOSKA HUB
-local toggleBtn = Instance.new("ImageButton") -- Usiamo ImageButton per l'immagine
+-- // CONFIGURAZIONE FINALE MELOSKA HUB
+local C = { 
+    bg = Color3.fromRGB(25, 25, 28),         -- NERO CHIARO
+    purple = Color3.fromRGB(255, 255, 255), 
+    text = Color3.fromRGB(255, 255, 255),    -- BIANCO
+    textDim = Color3.fromRGB(200, 200, 200),
+    accent = Color3.fromRGB(255, 255, 255),
+    border = Color3.fromRGB(60, 60, 65)
+}
+
+-- Rimuovi vecchi bottoni (per evitare duplicati o conflitti)
+if sg:FindFirstChild("MobileToggle") then
+    sg.MobileToggle:Destroy()
+end
+
+-- // BOTTONE IMMAGINE STILE GALASSIA - MELOSKA HUB
+local toggleBtn = Instance.new("ImageButton")
 local uiCorner = Instance.new("UICorner")
 local uiStroke = Instance.new("UIStroke")
-local uiGradient = Instance.new("UIGradient")
 
--- Configurazione Base
 toggleBtn.Name = "MobileToggle"
 toggleBtn.Parent = sg
-toggleBtn.Size = UDim2.new(0, 65, 0, 65)
-toggleBtn.Position = UDim2.new(0, 20, 0.5, -32)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35) -- Nero chiaro/antracite
+toggleBtn.Size = UDim2.new(0, 65, 0, 65) -- Dimensione del bottone
+toggleBtn.Position = UDim2.new(0, 15, 0.5, -32) -- Posizionato a sinistra
+toggleBtn.BackgroundColor3 = C.bg -- Sfondo nero chiaro del bottone
 toggleBtn.BorderSizePixel = 0
 toggleBtn.Active = true
-toggleBtn.Draggable = true
-toggleBtn.ZIndex = 10
+toggleBtn.Draggable = true -- Trascinalo col dito!
+toggleBtn.ZIndex = 100 -- Assicura che sia sempre in primo piano
 
--- AGGIUNGI QUI LA TUA IMMAGINE
--- Se è un'emoji, usa toggleBtn.Text (ma questo è un ImageButton). 
--- Se hai un ID immagine mettilo qui sotto:
-toggleBtn.Image = "rbxassetid://0" -- Sostituisci lo 0 con il tuo ID immagine
-toggleBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+-- ICONA GALASSIA (ID selezionato per te)
+toggleBtn.Image = "rbxassetid://10734950309" 
+toggleBtn.ImageColor3 = Color3.fromRGB(255, 255, 255) -- L'immagine sarà bianca
+toggleBtn.ScaleType = Enum.ScaleType.Fit
+toggleBtn.ImageTransparency = 0.1 -- Leggera trasparenza per un tocco moderno
 
--- Arrotondamento perfetto
+-- Arrotondamento perfetto (lo rende tondo)
 uiCorner.CornerRadius = UDim.new(1, 0)
 uiCorner.Parent = toggleBtn
 
--- Bordino sfumato (UIStroke + Gradient)
+-- Bordo Bianco visibile (per spiccare sullo sfondo)
 uiStroke.Thickness = 3
+uiStroke.Color = Color3.fromRGB(255, 255, 255)
 uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 uiStroke.Parent = toggleBtn
 
-uiGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), -- Bianco
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))  -- Grigio
-})
-uiGradient.Rotation = 45
-uiGradient.Parent = uiStroke
-
--- EFFETTO PRESSIONE (Feedback visivo)
-toggleBtn.MouseButton1Down:Connect(function()
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
-end)
-
-toggleBtn.MouseButton1Up:Connect(function()
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 65, 0, 65)}):Play()
-end)
-
--- Funzione Apri/Chiudi con Dissolvenza (Tween)
+-- Funzione Toggle (Apri/Chiudi la UI) con animazione di pressione
 local menuVisible = true
 toggleBtn.MouseButton1Click:Connect(function()
     menuVisible = not menuVisible
+    
+    -- Effetto di pressione fluida
+    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    TweenService:Create(toggleBtn, tweenInfo, {Size = UDim2.new(0, 58, 0, 58)}):Play()
+    task.wait(0.1)
+    TweenService:Create(toggleBtn, tweenInfo, {Size = UDim2.new(0, 65, 0, 65)}):Play()
+
+    -- Nasconde/Mostra tutti gli altri elementi della UI
     for _, child in pairs(sg:GetChildren()) do
         if child:IsA("Frame") or child:IsA("CanvasGroup") then
-            if child.Name ~= "MobileToggle" then
-                -- Effetto comparsa/scomparsa fluido
-                local targetTransparency = menuVisible and 0 or 1
-                TweenService:Create(child, TweenInfo.new(0.3), {BackgroundTransparency = targetTransparency}):Play()
+            if child.Name ~= "MobileToggle" then -- Non nasconde il bottone stesso
                 child.Visible = menuVisible
             end
         end
