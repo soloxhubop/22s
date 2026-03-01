@@ -2078,90 +2078,105 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // INIEZIONE FOV SOTTO ANTI-RAGDOLL - MELOSKA DUELS
+-- // INIEZIONE FOV "CHIRURGICA" - MELOSKA DUELS
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local UIS = game:GetService("UserInputService")
     
-    -- Cerchiamo il contenitore guardando la foto
-    local mainGui = CoreGui:FindFirstChild("Meloska Hub Duels") or CoreGui:FindFirstChild("Meloska Duels")
-    if not mainGui then return end
+    -- Aspettiamo un tempo generoso per il caricamento
+    task.wait(5)
 
-    -- Cerchiamo il punto esatto dove c'è "Anti Ragdoll"
-    local antiRagdollLabel = nil
-    for _, v in pairs(mainGui:GetDescendants()) do
-        if v:IsA("TextLabel") and v.Text == "Anti Ragdoll" then
-            antiRagdollLabel = v
-            break
+    local function FindAndInject()
+        local targetFrame = nil
+        
+        -- Cerchiamo lo switch dell'Anti Ragdoll o il testo
+        for _, v in pairs(CoreGui:GetDescendants()) do
+            if (v:IsA("TextLabel") or v:IsA("TextButton")) and v.Text:find("Anti Ragdoll") then
+                -- Abbiamo trovato la riga dell'Anti Ragdoll
+                targetFrame = v.Parent -- Questo dovrebbe essere il frame della riga
+                break
+            end
+        end
+
+        if targetFrame and targetFrame.Parent then
+            -- Creiamo il nuovo pezzo per il FOV
+            local fovRow = Instance.new("Frame")
+            fovRow.Name = "FOV_Row_Added"
+            fovRow.Parent = targetFrame.Parent -- Lo mettiamo nello stesso contenitore della colonna
+            fovRow.Size = targetFrame.Size -- Copiamo la dimensione esatta della riga Anti Ragdoll
+            fovRow.BackgroundTransparency = 1
+            
+            -- Cerchiamo di forzare la posizione sotto Anti Ragdoll
+            if targetFrame:IsA("GuiObject") then
+                fovRow.LayoutOrder = targetFrame.LayoutOrder + 1
+            end
+
+            -- Titolo (Stile identico all'Hub)
+            local label = Instance.new("TextLabel", fovRow)
+            label.Size = UDim2.new(1, 0, 0, 15)
+            label.BackgroundTransparency = 1
+            label.Text = "Field of View: 70"
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 11
+            label.TextXAlignment = Enum.TextXAlignment.Left
+
+            -- Barra dello Slider (Blu Meloska)
+            local bar = Instance.new("Frame", fovRow)
+            bar.Name = "SliderBar"
+            bar.Size = UDim2.new(0.85, 0, 0, 3)
+            bar.Position = UDim2.new(0, 0, 0.75, 0)
+            bar.BackgroundColor3 = Color3.fromRGB(50, 120, 255) -- Il blu della tua foto
+            bar.BorderSizePixel = 0
+            Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+            -- Pallino (Bianco)
+            local dot = Instance.new("Frame", bar)
+            dot.Size = UDim2.new(0, 10, 0, 10)
+            dot.AnchorPoint = Vector2.new(0.5, 0.5)
+            dot.Position = UDim2.new(0, 0, 0.5, 0) -- Inizia a 70
+            dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+            -- Logica di movimento
+            local cam = workspace.CurrentCamera
+            local dragging = false
+
+            local function update(input)
+                local barAbsPos = bar.AbsolutePosition.X
+                local barAbsSize = bar.AbsoluteSize.X
+                local inputPos = input.Position.X
+                local percentage = math.clamp((inputPos - barAbsPos) / barAbsSize, 0, 1)
+                
+                dot.Position = UDim2.new(percentage, 0, 0.5, 0)
+                local fovVal = math.floor(70 + (percentage * 50))
+                cam.FieldOfView = fovVal
+                label.Text = "Field of View: " .. fovVal
+            end
+
+            dot.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                end
+            end)
+
+            UIS.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+
+            UIS.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    update(input)
+                end
+            end)
+            
+            print("Meloska Hub: FOV iniettato con successo!")
+        else
+            print("Meloska Hub: Impossibile trovare il punto di iniezione.")
         end
     end
 
-    if antiRagdollLabel then
-        local parentFrame = antiRagdollLabel.Parent -- Il frame che contiene la riga
-        
-        -- Creiamo il contenitore per il FOV
-        local fovRow = Instance.new("Frame")
-        fovRow.Name = "FOVRow"
-        fovRow.Parent = parentFrame.Parent -- Lo mettiamo nello stesso contenitore della lista
-        fovRow.Size = UDim2.new(0.45, 0, 0, 40) -- Stessa larghezza della colonna sinistra
-        fovRow.BackgroundTransparency = 1
-        
-        -- Posizionamento: Lo mettiamo subito sotto Anti Ragdoll
-        -- Se l'Hub usa un UIListLayout, si posizionerà da solo se lo rinominiamo bene
-        fovRow.LayoutOrder = antiRagdollLabel.Parent.LayoutOrder + 1
-
-        -- Titolo FOV (Stile identico all'Hub)
-        local label = Instance.new("TextLabel", fovRow)
-        label.Size = UDim2.new(1, 0, 0, 15)
-        label.Text = "Field of View: 70"
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 12
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.BackgroundTransparency = 1
-
-        -- Barra Slider (Blu Meloska)
-        local bar = Instance.new("Frame", fovRow)
-        bar.Size = UDim2.new(0.9, 0, 0, 4)
-        bar.Position = UDim2.new(0, 0, 0.7, 0)
-        bar.BackgroundColor3 = Color3.fromRGB(50, 120, 255) -- Il blu che vedo in foto
-        bar.BorderSizePixel = 0
-        Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
-
-        -- Pallino (Bianco)
-        local dot = Instance.new("Frame", bar)
-        dot.Size = UDim2.new(0, 12, 0, 12)
-        dot.AnchorPoint = Vector2.new(0.5, 0.5)
-        dot.Position = UDim2.new(0, 0, 0.5, 0)
-        dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-
-        -- Logica Slider
-        local dragging = false
-        local function update(input)
-            local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-            dot.Position = UDim2.new(pos, 0, 0.5, 0)
-            local val = math.floor(70 + (pos * 50))
-            workspace.CurrentCamera.FieldOfView = val
-            label.Text = "Field of View: " .. val
-        end
-
-        dot.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-            end
-        end)
-
-        UIS.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
-
-        UIS.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                update(input)
-            end
-        end)
-    end
+    FindAndInject()
 end)
