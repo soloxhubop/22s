@@ -1174,7 +1174,7 @@ end)
 ProgressLabel = Instance.new("TextLabel", progressBar)
 ProgressLabel.Size = UDim2.new(0.35, 0, 0.5, 0)
 ProgressLabel.Position = UDim2.new(0, 10 * guiScale, 0, 0)
-ProgressLabel.BackgroundTransparency = 1
+ProgressLabel.BackgroundTransparency = 0.5
 ProgressLabel.Text = "READY"
 ProgressLabel.TextColor3 = C.text
 ProgressLabel.Font = Enum.Font.GothamBold
