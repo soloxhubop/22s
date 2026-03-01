@@ -2078,94 +2078,97 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // UNIVERSAL FOV INJECTOR - MELOSKA HUB
+-- // INIETTORE FOV DEFINITIVO (COORDINATO)
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
     local UIS = game:GetService("UserInputService")
     
-    -- Aspettiamo che l'Hub sia caricato
-    task.wait(3)
+    task.wait(4) -- Aspettiamo che tutto sia caricato bene
 
-    local function InjectFOV()
-        local targetParent = nil
-        local refBtn = nil
-
-        -- Cerca il bottone Anti-Ragdoll in tutta la UI
+    -- Cerchiamo il ScrollingFrame che contiene i bottoni dell'Hub
+    local function GetMainScroll()
         for _, v in pairs(CoreGui:GetDescendants()) do
-            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                if v.Text:find("Anti%-Ragdoll") or v.Text:find("AntiRagdoll") then
-                    refBtn = v
-                    targetParent = v.Parent
-                    break
-                end
+            -- Cerchiamo un contenitore che abbia già dei bottoni dentro
+            if v:IsA("ScrollingFrame") and #v:GetChildren() > 2 then
+                return v
             end
-        end
-
-        if targetParent and refBtn then
-            -- Crea il Frame del FOV con lo stesso stile del bottone trovato
-            local fovFrame = Instance.new("Frame")
-            fovFrame.Name = "FOV_Integrated"
-            fovFrame.Parent = targetParent
-            -- Copia le dimensioni del bottone Anti-Ragdoll
-            fovFrame.Size = UDim2.new(refBtn.Size.X.Scale, refBtn.Size.X.Offset, 0, 45)
-            fovFrame.BackgroundTransparency = 1
-
-            -- Testo FOV (Copia Colore e Font dell'Anti-Ragdoll)
-            local label = Instance.new("TextLabel", fovFrame)
-            label.Size = UDim2.new(1, 0, 0, 18)
-            label.BackgroundTransparency = 1
-            label.Text = "FIELD OF VIEW: 70"
-            label.TextColor3 = (refBtn:IsA("TextButton") or refBtn:IsA("TextLabel")) and refBtn.TextColor3 or Color3.fromRGB(255,255,255)
-            label.Font = (refBtn:IsA("TextButton") or refBtn:IsA("TextLabel")) and refBtn.Font or Enum.Font.GothamBold
-            label.TextSize = 13
-            label.TextXAlignment = Enum.TextXAlignment.Left
-
-            -- Barra Slider coordinata
-            local bar = Instance.new("Frame", fovFrame)
-            bar.Size = UDim2.new(1, 0, 0, 3)
-            bar.Position = UDim2.new(0, 0, 0.7, 0)
-            bar.BackgroundColor3 = label.TextColor3
-            bar.BackgroundTransparency = 0.6
-            bar.BorderSizePixel = 0
-            Instance.new("UICorner", bar)
-
-            -- Pallino Slider
-            local dot = Instance.new("Frame", bar)
-            dot.Size = UDim2.new(0, 12, 0, 12)
-            dot.AnchorPoint = Vector2.new(0.5, 0.5)
-            dot.Position = UDim2.new(0, 0, 0.5, 0)
-            dot.BackgroundColor3 = label.TextColor3
-            Instance.new("UICorner", dot)
-
-            -- Logica di movimento
-            local dragging = false
-            local function update(input)
-                local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-                dot.Position = UDim2.new(pos, 0, 0.5, 0)
-                local val = math.floor(70 + (pos * 50))
-                workspace.CurrentCamera.FieldOfView = val
-                label.Text = "FIELD OF VIEW: " .. val
-            end
-
-            dot.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                end
-            end)
-
-            UIS.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
-            end)
-
-            UIS.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    update(input)
-                end
-            end)
         end
     end
 
-    InjectFOV()
+    local scroll = GetMainScroll()
+
+    if scroll then
+        -- Troviamo un colore di riferimento dai bottoni esistenti
+        local refBtn = scroll:FindFirstChildWhichIsA("TextButton", true) or scroll:FindFirstChildWhichIsA("TextLabel", true)
+        local mainColor = refBtn and refBtn.TextColor3 or Color3.fromRGB(255, 255, 255)
+        local mainFont = refBtn and refBtn.Font or Enum.Font.GothamBold
+
+        -- Creiamo il pezzo del FOV
+        local fovContainer = Instance.new("Frame")
+        fovContainer.Name = "Meloska_FOV_Section"
+        fovContainer.Parent = scroll
+        fovContainer.Size = UDim2.new(1, -10, 0, 50)
+        fovContainer.BackgroundTransparency = 1
+
+        -- Testo (Stesso stile dell'Hub)
+        local label = Instance.new("TextLabel", fovContainer)
+        label.Size = UDim2.new(1, 0, 0, 20)
+        label.BackgroundTransparency = 1
+        label.Text = "FIELD OF VIEW: 70"
+        label.TextColor3 = mainColor
+        label.Font = mainFont
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        -- Barra Slider
+        local bar = Instance.new("Frame", fovContainer)
+        bar.Size = UDim2.new(0.9, 0, 0, 3)
+        bar.Position = UDim2.new(0, 0, 0.7, 0)
+        bar.BackgroundColor3 = mainColor
+        bar.BackgroundTransparency = 0.7
+        bar.BorderSizePixel = 0
+        Instance.new("UICorner", bar)
+
+        -- Pallino
+        local dot = Instance.new("Frame", bar)
+        dot.Size = UDim2.new(0, 12, 0, 12)
+        dot.AnchorPoint = Vector2.new(0.5, 0.5)
+        dot.Position = UDim2.new(0, 0, 0.5, 0)
+        dot.BackgroundColor3 = mainColor
+        Instance.new("UICorner", dot)
+
+        -- Logica
+        local dragging = false
+        local function update(input)
+            local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+            dot.Position = UDim2.new(pos, 0, 0.5, 0)
+            local val = math.floor(70 + (pos * 50))
+            workspace.CurrentCamera.FieldOfView = val
+            label.Text = "FIELD OF VIEW: " .. val
+        end
+
+        dot.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update(input)
+            end
+        end)
+        
+        -- Forza l'ordinamento se c'è un UIListLayout
+        local layout = scroll:FindFirstChildOfClass("UIListLayout")
+        if layout then
+            fovContainer.LayoutOrder = 999 -- Lo mette in fondo
+        end
+    end
 end)
