@@ -1956,3 +1956,46 @@ UserInputService.JumpRequest:Connect(function()
 end)
 
 print("Chilli-Style Bypass Loaded | 2026 Patch Fix")
+
+-- // BOTTONE MOBILE MELOSKA HUB (🌌)
+local toggleBtn = Instance.new("TextButton")
+local uiCorner = Instance.new("UICorner")
+local uiStroke = Instance.new("UIStroke")
+
+-- Configurazione Estetica e Posizione
+toggleBtn.Name = "MobileToggle"
+toggleBtn.Parent = sg -- Assicurati che 'sg' sia il nome della tua ScreenGui
+toggleBtn.Size = UDim2.new(0, 60, 0, 60) -- Un po' più grande per facilità di tocco
+toggleBtn.Position = UDim2.new(0, 20, 0.5, -30) -- Posizionato a sinistra al centro
+toggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 28) -- Nero chiaro
+toggleBtn.Text = "🌌" -- L'emoji richiesta
+toggleBtn.TextSize = 30
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.Active = true
+toggleBtn.Draggable = true -- Trascinalo dove vuoi col dito!
+toggleBtn.ZIndex = 10 -- Per essere sicuro che stia sopra a tutto
+
+-- Arrotondamento
+uiCorner.CornerRadius = UDim.new(1, 0)
+uiCorner.Parent = toggleBtn
+
+-- Bordino Bianco per visibilità
+uiStroke.Parent = toggleBtn
+uiStroke.Thickness = 2
+uiStroke.Color = Color3.fromRGB(255, 255, 255)
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Funzione Apri/Chiudi
+local menuVisible = true
+toggleBtn.MouseButton1Click:Connect(function()
+    menuVisible = not menuVisible
+    -- Cerca il frame principale della tua UI per nasconderlo/mostrarlo
+    for _, child in pairs(sg:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("CanvasGroup") then
+            if child.Name ~= "MobileToggle" then
+                child.Visible = menuVisible
+            end
+        end
+    end
+end)
