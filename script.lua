@@ -1908,34 +1908,41 @@ task.spawn(function()
 end)
 
 -- // SMOOTH JUMP EXECUTION
+-- // INFINITE JUMP AGGIORNATO (SOSTITUISCI IL VECCHIO)
+local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
-local canJump = true
-local cooldownTime = 0.2 -- Tempo di attesa tra un salto e l'altro
 
-local function ExecuteJump()
-    local char = game.Players.LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+-- CONFIGURAZIONE
+local JUMP_POWER = 62 -- 50 è il normale, 62 è "poco poco" più veloce
+local cooldownTime = 0.2
+local canJump = true
+
+-- Funzione per applicare la potenza al personaggio
+local function SetPower(char)
+    local hum = char:WaitForChild("Humanoid")
+    hum.JumpPower = JUMP_POWER
+    hum.UseJumpPower = true
+end
+
+if Player.Character then SetPower(Player.Character) end
+Player.CharacterAdded:Connect(SetPower)
+
+-- Logica Salto Infinito
+UserInputService.JumpRequest:Connect(function()
+    local char = Player.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
 
-    if hrp and hum and _G.InfJump and canJump then
+    if hum and _G.InfJump and canJump then
         canJump = false
         
-        -- Reset della rotazione per non cadere/girare
-        hrp.AssemblyAngularVelocity = Vector3.new(0, hrp.AssemblyAngularVelocity.Y, 0)
-
-        -- Applichiamo la velocità
-        -- Se ti teletrasporta ancora, prova a mettere 40 invece di 45
-        hrp.AssemblyLinearVelocity = Vector3.new(
-            hrp.AssemblyLinearVelocity.X, 
-            (_G.JumpPower or 45), 
-            hrp.AssemblyLinearVelocity.Z
-        )
-
-        -- Aspettiamo prima di poter saltare di nuovo (evita il rubberbanding)
+        -- Applica forza e cambia stato
+        hum.JumpPower = JUMP_POWER
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        
         task.wait(cooldownTime)
         canJump = true
     end
-end
+end)
 
 UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.Space then
